@@ -4,12 +4,14 @@ This is a mirror repository of TreeScaper from https://github.com/whuang08/TreeS
 
 Current progress:
 - Documentation.
---- Data structure of tree.
---- Input of a tree.
---- Compute the bipartition.
+
+-- Data structure of tree.
+-- Input of a tree.
+-- Compute the bipartition.
 
 - New implementation
---- Stack and queue.
+
+-- Stack and queue.
 
 
 

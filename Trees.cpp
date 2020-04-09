@@ -608,7 +608,7 @@ Treefileformat Trees::CheckTreeFormat()
 };
 
 //########################ZD comment########################################
-//# IAnother constructer that seems to be duplicated
+//# Another constructor that seems to be duplicated
 //# version of initialTrees. This constructer manipulate
 //# the string in a complicated way to add weighted 1
 //# as default for trees that is unweighted. Also note

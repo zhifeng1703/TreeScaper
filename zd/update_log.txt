@@ -1,0 +1,11 @@
+-- 5/21/20
+
+	- Fix core dump issue of NLDR routine with method "CLASSIC_MDS" when d > 5. See the modified code NLDR::CLASSIC_MDS in "wNLDR.cpp".
+
+	It is cause by the memory leakage in extracting COR matrix from SVD of distance matrix. The issue has been fixed. 
+
+	Note that this happens when distance matrix is indefinite and the largest d-th eigenvalues have at least one negative value. When this happened, one column or more of COR matrix would be all zeros.
+
+	It has been seen that, occasionally, the code is still functioning with the leak happened. Therefore, it is recommanded to double check the COR matrix output of previous results and see if there was abnormal zero column.
+
+	

@@ -36,7 +36,7 @@
 \newcommand{\rref}[1]{\hyperref[#1]{\textcolor{blue}{\myuline{\texttt{#1}}}}}
 \newcommand{\tref}[2]{\hyperref[#2]{\textcolor{blue}{\myuline{\texttt{#1}}}}}
 \newcommand{\memref}[2]{\hyperref[#2#1]{\textcolor{blue}{\myuline{#2::\texttt{#1}}}}}
-
+\newcommand{\ttype}[1]{\textcolor{blue}{\texttt{#1}}}
 
 
 
@@ -63,7 +63,7 @@
 
 \newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
 
-\title{Comments for TreeScaper}
+\title{Developer Manual for TreeScaper}
 \author{Zhifeng Deng}
 
 	
@@ -71,6 +71,74 @@
 
 \begin{document}
 	\maketitle
+	
+	\tableofcontent
+	
+	\section{Introduction}
+	
+	\section{Basic data structures}
+	
+	Most of the basic data structures are constructed by Wen Huang. They includes basic array, matrix, string, mapping and file stream. They are, basically the c++ built-in structure warped up with convenient functions and operators. For example, the matrix class integrates singular value decomposition from CLAPACK. These data structures' header file and implementation files are prefixed with "w".
+	
+	There are other more complicated data structures for specific algorithm and mathematical objects such as trees and community. They will be addressed in the next section. 
+	
+	\subsection{Array}
+	
+	Members of array of type \ttype{T} are consisted of a pointer of \ttype{T}^* \texttt{vec} and a static integer \texttt{length} that indicates the length. The member functions and operators are given below.
+	
+	\begin{enumerate}
+		\item \texttt{friend std::istream \&operator>>}
+		
+		This operator does nothing and will not assign value to the array from the \texttt{istream}. According to particular needs of reading data, this may later be implemented with actual reading functionality.
+		
+		\item \texttt{friend std::ostream \&operator<<}
+		
+		This operator will output the length and its components separated by ":" and ",".
+		
+		Example: an array of \ttype{char[]} from "a" to "e" is outputted in the format of
+		
+		\texttt{\{ 5 : a, b, c, d, e\}}
+		
+		\item \texttt{const Array\& &Array::operator=(const Array &right)}
+		
+		The assignment operator will free the pointer \texttt{vec} on the left and allocate a new \texttt{vec}. Then it assigns values from right hand side to left hand side component-wise. 
+		
+		The operator returns a pointer of the array on the left.
+		
+				
+		\item \texttt{const Array\& Array::operator+=(const Array &right)}
+		
+		This operator creates a new array with the right hand side attached to left hand side. It allocates \texttt{Array} of the correct length and then assigns values accordingly. Then call the assignment operator \texttt{=} to overwrite the current array.
+		
+		Warning: calling \texttt{=} costs repeated and unnecessary copy-pasting.
+		
+		\item \texttt{const Array\& Array::operator-=(const Array &right)}
+		
+		This operator creates a new array from the left hand side, with every component presented in the \texttt{right} removed and calls assignment operator to overwrite the current \texttt{Array}.
+		
+		Warning: calling \texttt{=} costs repeated and unnecessary copy-pasting. 
+		
+		Warning: the new array is built incrementally and calls \texttt{resize} everytime, will brings the complexity to $O(length^2\times right.length)$ other than $O(length\times right.length)$.
+		
+		\item \texttt{bool Array::operator==}
+		
+		Compares two array component-wise after comparing the length.
+		
+		\item \texttt{bool Array::operator<}
+		
+		The logic of the compare operator is to set the array with component-wise greater component to be the greater one. If the lengths are different, only compare the first $k$ components where $k$ is the smaller length. If the first $k$ components happens to be the same (component-wise), the longer \texttt{Array} is greater than the shorter one. 
+		
+		\item \texttt{Array Array::operator(const int index, const int end)}
+		
+		This operator extract sub-array from the current array. It takes two indices as parameters and return a new array that has the values from \texttt{index} to \texttt{end}.
+		
+		Warning: this implementation is different than the implementation of \texttt{String::operator()}, which also takes two integers as parameters but the first one is the starting index and the second one is the length of the sub-string, instead of the ending index.
+		
+	\end{enumerate}
+	
+	\subsection{Matrix}
+	
+	\subsection{String}
 	
 	\section*{Data structure}
 	

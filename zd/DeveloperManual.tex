@@ -71,8 +71,9 @@
 
 \begin{document}
 	\maketitle
+
+	\tableofcontents
 	
-	\tableofcontent
 	
 	\section{Introduction}
 	
@@ -84,7 +85,7 @@
 	
 	\subsection{Array}
 	
-	Members of array of type \ttype{T} are consisted of a pointer of \ttype{T}^* \texttt{vec} and a static integer \texttt{length} that indicates the length. The member functions and operators are given below.
+	Members of array of type \ttype{T} are consisted of a pointer of \ttype{T}* \texttt{vec} and a static integer \texttt{length} that indicates the length. The member functions and operators are given below.
 	
 	\begin{enumerate}
 		\item \texttt{friend std::istream \&operator>>}
@@ -99,20 +100,20 @@
 		
 		\texttt{\{ 5 : a, b, c, d, e\}}
 		
-		\item \texttt{const Array\& &Array::operator=(const Array &right)}
+		\item \texttt{const Array\& Array::operator=(const Array \&right)}
 		
 		The assignment operator will free the pointer \texttt{vec} on the left and allocate a new \texttt{vec}. Then it assigns values from right hand side to left hand side component-wise. 
 		
 		The operator returns a pointer of the array on the left.
 		
 				
-		\item \texttt{const Array\& Array::operator+=(const Array &right)}
+		\item \texttt{const Array\& Array::operator+=(const Array \&right)}
 		
 		This operator creates a new array with the right hand side attached to left hand side. It allocates \texttt{Array} of the correct length and then assigns values accordingly. Then call the assignment operator \texttt{=} to overwrite the current array.
 		
 		Warning: calling \texttt{=} costs repeated and unnecessary copy-pasting.
 		
-		\item \texttt{const Array\& Array::operator-=(const Array &right)}
+		\item \texttt{const Array\& Array::operator-=(const Array \&right)}
 		
 		This operator creates a new array from the left hand side, with every component presented in the \texttt{right} removed and calls assignment operator to overwrite the current \texttt{Array}.
 		
@@ -138,11 +139,158 @@
 	
 	\subsection{Matrix}
 	
-	\subsection{String}
+	Members of a matrix of type \ttype{T} are consisted of a pointer of pointers \ttype{T}** implemented in\href{https://en.wikipedia.org/wiki/Row-_and_column-major_order}{row-major} and two static integers \texttt{row} and \texttt{col} which indicate the dimensions of the matrix. This class also calls classic linear algebra algorithms from \href{https://www.netlib.org/clapack/}{CLAPACK}. 
+	
+	Overloaded operators are given below.
+	
+	\begin{enumerate}
+		\item \texttt{friend istream \&operator>>}.
+		
+		Warning: This operator does nothing, i.e., it does not assign values from the input stream.
+		\item \texttt{friend ostream \&operator<<}.
+		
+		This operator output the matrix in the format of
+		
+		\texttt{\{ ( 3 , 2 )}
+		
+		\texttt{a, b, c}
+		
+		\texttt{d, e, f}
+		
+		\texttt{\}}
+		\item \texttt{friend Matrix operator+(Matrix<\ttype{T}> left, Matrix<\ttype{T}> right)}.
+		
+		This operator resize the left and right matrices to the lager dimension by calling member function \tref{resize}{MatrixResize} and then create a new matrix and assign values from entry-wise addition.
+		
+		Warning: the resize of left and right is silent here, which will permanently change the matrix being summed.
+		
+		\item \texttt{friend Matrix operator+(Matrix<\ttype{T}> left, \ttype{S} right)}.
+		
+		This operator accepting a number \texttt{right} of type \ttype{S} on the right will add \texttt{right} entry-wise to each element in Matrix \texttt{left}, i.e., shift the matrix by \texttt{right}.
+		
+		\item \texttt{friend Matrix operator+(S left, Matrix<T> right)}
+		
+		Shift the matrix by \texttt{left} entry-wise.
+		
+		\item \texttt{friend Matrix operator-}
+		
+		See \texttt{friend Matrix operator+}.
+		
+		\item \texttt{Matrix operator*(const Matrix<\ttype{T}> \&left, const Matrix<\ttype{T}> \&right)}
+		
+		Implement \href{https://en.wikipedia.org/wiki/Matrix_multiplication}{matrix multiplication}.
+		
+		\item \texttt{friend Matrix operator*(\ttype{S} value, Matrix<\ttype{T}> mat)} or \texttt{(Matrix<\ttype{T}> mat, \ttype{S} value)}.
+		
+		This operator return a new matrix entry-wise scaled by \texttt{value}. Note that this operator does not change the original matrix.
+		
+		Warning: the matrix getting rescaled should be passed by reference in order to avoid construction/destruction computation.
+		
+		\item \texttt{friend Matrix operator/(Matrix<\ttype{T}> mat, \ttype{S} value)}
+		
+		This operator return a new matrix entry-wise divided by \texttt{value}. Note that this operator does not change the original matrix. Also note that this is not the syntax used in some advanced language where $A/B$ means $B^{-1}A$.
+		
+		Warning: the matrix getting rescaled should be passed by reference in order to avoid construction/destruction computation.
+		
+		\item \texttt{T \&operator()(const int r, const int c = 0)}
+		
+		This operator returns the entry at $r$-row and $c$-column.
+		
+	\end{enumerate}
+
+	Important member functions are given below.
+	
+	\begin{enumerate}
+		\item \texttt{Matrix<\ttype{double}> compute\_scalar\_product\_matrix()}
+		
+		This function return a \ttype{double} type matrix $S\in \mathbb{R}^{n\times n}$ from the current matrix $D^{(2)}\in \mathbb{R}^{n\times n}$. $S$ is the centering-scaled $D^{(2)}$, which is assumed to be a squared distance matrix of $n$ points $\{p_i\}_{i=1,\cdots, n}$, $D^{(2)}_{ij}=D^{(2)}_{ji}=d^2(p_i,p_j)$. 
+		
+		Note that the classical multidimensional scaling method, \href{https://en.wikipedia.org/wiki/Multidimensional_scaling}{MDS} assumes these $n$ points lie on some Euclidean space $\mathbb{R}^k$ equipped with classic 2-norm distance. And $S$ is a squared distance matrix of transformed $n$ points such that the arithmetic mean of new points is $0^k\in \mathbb{R}^k$. Also note that the arithmetic mean in Euclidean space is also the Karcher mean defined by
+		\[
+			\arg\min\limits_{m\in \mathbb{R}^k}\sum_{i=1}^n d^2(p_i,m).
+		\]
+		
+		The formula of computing $S$ is given by
+		\[
+			S=-\frac{1}{2}JD^{(2)}J
+		\]
+		where $J=I-\frac{1}{n}\mathbf{1}\mathbf{1}^T$ and $\mathbf{1}\mathbf{1}^T$ is all-1 matrix. Also note that the transformation $D^{(2)}\to S$ preserves the solution of MDS, i.e.,
+		\[
+			\arg\min\limits_{B\in \mathbb{R}^{n\times k}} \left\Vert BB^T - D^{(2)}\right\Vert^2_F = \arg\min\limits_{B\in \mathbb{R}^{n\times k}} \left\Vert -\frac{1}{2}JBB^TJ + \frac{1}{2}JD^{(2)}J\right\Vert^2_F
+		\]
+		where $B$ is the Euclidean coordinate matrix of $n$ points in $\mathbb{R}^k$ which generates (approximately) the squared distance matrix $D^{(2)}$.
+		
+		Error: The invariance of transformation seems to be only true for Euclidean space. For more abstract $D^{(2)}$ generated from more general metric on Riemannian manifold, the scaling $-\frac{1}{2}JD^{(2)}J$ does not preserves positive definiteness of the squared distance matrix, which further causes negative eigenvalues in the following PCA, the eigendecomposition, process.
+		
+		Warning: The squared distance matrix $D^{(2)}$ used in here is inconsistent with the distance matrix $D$ computed in \mmemref{compute\_Distance\_Matrix}{computeDistanceMatrix}, in difference of entry-wise squared or not. 
+		
+		\item \texttt{Matrix<double> compute\_Distance\_Matrix()}
+		
+		This function return a \ttype{double} type matrix $D\in \mathbb{R}^{n\times n}$ computed from the current matrix $M\in \mathbb{R}^{n\times k}$. $M$ is consider as coordinate matrix of $n$ points in $k$-dimensional Euclidean space, $i$-th row represents the $k$-tuple Euclidean coordinates of a point $p_i$. And $D$ is the distance matrix where $D_{ij}=D_{ji}=d(p_i,p_j)=\Vert p_i - p_2j\Vert_2$ is the 2-norm distance between points $p_i,p_j$.
+		
+		Warning: the resulting distance matrix $D$ is dense, the symmetric structure is not exploited here. 
+	\end{enumerate}
+
+	\section{Algorithms}
+	
+	\subsection{Nonlinear dimensional reduction(NLDR)}
+	
+	This part collects algorithms and their important subroutines implemented in TreeScaper. The main goal in these algorithms is that given a squared distance matrix $D^{(2)}$ or distance matrix $D$ of $n$ points $\{p_i\}_{i=1,\cdots, n}$ on some metric space, find $n$ points $\{p_i'\}_{i=1,\cdots,n}\subset \mathbb{R}^k$, such that the distance matrix $D'$ for $\mathbf{p}'$ approximates $D$ the best, under the cost functions defined in different algorithm. Note that these $n$ new points $\mathbf{p}'$ can be represents by the coordinate matrix $B\in \mathbb{R}^{n\times k}$ which is often used as the output of these NLDR algorithms.
+	
+	\subsubsection{Classical Multidimensional scaling(MDS)}.
+	
+	Classical Multidimensional scaling assumes $D^{(2)}$ is generated from Euclidean space with typical vector 2-norm as distance. The implemented algorithm \texttt{NLDR::CLASSIC\_MDS} contains 4 parts:
+	\begin{enumerate}
+		\item Compute centered matrix $S$ from the given tree distance matrix $D$ by calling 
+		
+		\rref{Matrix}::\mtref{compute\_Scalar\_Matrix}{MatrixComputeScalarMatrix}.
+		\item Perform \href{https://en.wikipedia.org/wiki/Singular_value_decomposition}{singular value decompositions(SVD)} to $S$ by calling \rref{Matrix}::\mtref{SVD\_LIB}{MatrixSVDLIB} to obtain
+		\[
+			S = U\Sigma V^T.
+		\]
+		
+		Note that since $S$ is symmetric, there exist eigen-decomposition $S=Q\Lambda Q^T$, i.e., there exists a signature matrix $E$, which has only $1$ or $-1$ in diagonal and $0$ elsewhere, such that $U\Sigma V^T = Q\Lambda EEQ^T=Q(\Lambda E)(QE)^T$ and $U = Q$, $\Sigma = \Lambda E$ and $V = QE$. This implies eigen-decomposition from CLAPACK is more efficient.
+		
+		Also note that if $D^{(2)}$ uses vector 2-norm in Euclidean space, $S$ is positive definite and SVD coincides with eigen-decomposition.
+		
+		Warning: when there exist files named consistently that indicates SVD has been done and $U,V,\Sigma$ has been stored, the routine will not do it again but simply read them from files. This is silent and could cause problem if those files are not actually inconsistent.
+		\item In case of performing MDS for $D^{(2)}$ from other metric space, which cause the presence of negative eigenvalues, it selects the $k$ eigenvectors $Q_{i_j}$, $j=1,\cdots k,$ where $\lambda_{i_j}$ are the $k$ most largest positive eigenvalues.
+		
+		Error: memory leakage happens in this process whenever a negative eigenvalues encountered in the $k$ most largest in magnitude eigenvalues. This problem is temporarily fixed but the theoretical explanation and necessity of this process is still needed. the classical MDS may not be suitable at all for Tree subjects.
+		
+		\item Produce the coordinates matrix $B$ for $n$ points $\mathbf{p}'\subset \mathbb{R}^{k}$ by
+		\[
+			B=\begin{bmatrix}
+				\sqrt{\lambda_{i_1}}Q_{i_1} & \cdots & \sqrt{\lambda_{i_k}}Q_{i_k}
+			\end{bmatrix}\in \mathbb{R}^{n\times k}.
+		\]
+		
+		\item Compute the stress that estimate how good $BB^T$ approximate $D^{(2)}$ by calling \rref{NLDR}::\mtref{CLASSIC\_MDS\_stress\_function}{NLDRCLASSICMDSstressfunction}.
+		
+		Note that classical MDS do not need to compute the stress since $B$ already minimized the stress function. However, since Tree space is not a Euclidean space with appropriate distance, the output $B$ does not minimize the stress function.
+	\end{enumerate}
+	
+	
+	
+	For more information of MDS, see \href{https://en.wikipedia.org/wiki/Multidimensional_scaling}{here}.
+	
+	\section*{Implementations of some routines}
+	
 	
 	\section*{Data structure}
 	
+	
 	\begin{enumerate}
+		\item \mrref{Matrix}
+			
+			\begin{tabular}{>{\bfseries}lp{0.2\textwidth}p{0.6\textwidth}}
+				Description & \multicolumn{2}{p{0.8\textwidth}}{Row-major 2-dimensional array.} \\
+				Member & \mtref{row}{MatrixRow} & Number of rows.\\
+				&\mtref{col}{MatrixCol} & Number of columns.\\
+				&**\mmemref{matrix}{MatrixMatrix} & Pointers to each row.\\
+				Member function& \tref{resize}{MatrixResize} & Change the dimensions. \\
+			\end{tabular}
+		
 		\item \mrref{Ptree}
 		
 			\begin{tabular}{>{\bfseries}lp{0.2\textwidth}p{0.6\textwidth}}
@@ -228,8 +376,7 @@
 		
 	\end{enumerate}
 
-	
-	\section*{Implications of some routines}
+
 	
 	\subsection*{\texttt{\texttt{TreeOPE}} related routines.}
 	\begin{enumerate}
